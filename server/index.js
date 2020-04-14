@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// PostGres DataBase Setup
 const { Pool } = require("pg");
 const pgClient = new Pool({
   user: keys.pgUser,
@@ -16,12 +17,17 @@ const pgClient = new Pool({
   password: keys.pgPassword,
   port: keys.pgPort,
 });
-
-// PostGres DataBase
 pgClient.on("error", () => console.log("Lost PG connection"));
-pgClient
-  .query("CREATE TABLE IF NOT EXISTS values (number INT)")
-  .catch((err) => console.log(err));
+
+pgClient.query("CREATE TABLE IF NOT EXISTS values (number INT)", (err, res) => {
+  if (err) {
+    console.log("Table creation failed:", err);
+  } else {
+    console.log("Table creation SUCCESS!", res);
+  }
+});
+// .then(() => console.log("Table values successfully created"))
+// .catch((err) => console.log(err));
 
 // Redis Client Setup
 const redis = require("redis");
@@ -50,6 +56,7 @@ app.get("/values/current", async (req, res) => {
 
 app.post("/values", async (req, res) => {
   const index = req.body.index;
+
   if (parseInt(index) > 40) {
     return res.status(422).send("Index too high");
   }
