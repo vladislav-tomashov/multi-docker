@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dockervladt/fib-numbers-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dockervladt/fib-numbers-test npm run test
+
+after_success:
+  - docker build -t dockervladt/multi-client ./client
+  - docker build -t dockervladt/multi-server ./server
+  - docker build -t dockervladt/multi-worker ./worker
+  - docker build -t dockervladt/multi-nginx ./nginx
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push dockervladt/multi-client
+  - docker push dockervladt/multi-server
+  - docker push dockervladt/multi-nginx
+  - docker push dockervladt/multi-worker
